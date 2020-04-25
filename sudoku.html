@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+
+        <title>Visualizations</title>
+        <meta name="description" content="CS 61B Visualizations of Algorithms and Data Structures">
+        <meta name="author" content="Ethan Mehta">
+
+        <link rel="stylesheet" href="">
+        <script type="text/javascript" src="sudoku.js"></script>
+    </head>
+
+    <body>
+        <header>
+            <!-- <h1>Sudoku</h1> -->
+            <h2><span class="tagline">Sudoku Generator and Solver using Recursive Backtracking</span></h2>
+        
+            <!-- <nav>
+                <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="sudoku.html">Sudoku</a></li>
+                <li><a href="">Notes</a></li>
+            </ul>
+            </nav> -->
+
+        </header>
+
+        <article>
+            <!-- <h1>Suduko Game</h1> -->
+
+            
+            <figure id="fig1"> 
+            <!-- <figcaption>Sudoku</figcaption> -->
+            <canvas id="canvas" width="450" height="450" style="background-color:#333"></canvas>
+
+            <br>
+            <input type="radio" id="easy" name="Difficulty" value="0.7">
+            <label for="easy">Easy</label><br>
+            <input type="radio" id="medium" name="Difficulty" value="0.4">
+            <label for="medium">Medium</label><br>
+            <input type="radio" id="hard" name="Difficulty" value="0.2">
+            <label for="hard">Hard</label>
+            <br>
+            
+            <br>
+
+            <button id="checkButton">Check Your Work!</button>
+            <br>
+            <button id="solveButton">Reveal Answer!</button>
+            </figure>
+
+        </article>
+        <script>
+             ///////////////////////////////////////////////////////////////////////////////
+            //////////////// Suduko Generation using Recursive Backtracking ////////////////
+            ///////////////////////////////////////////////////////////////////////////////
+
+            function generateValidDigits(digits, rowSets, colSets, groupSets) {
+                return backtrackingSolver(digits, rowSets, colSets, groupSets);
+            }
+
+            function backtrackingSolver(digits, rowSets, colSets, groupSets) {
+                
+                if (isDone(rowSets, colSets, groupSets)) {
+                    return digits;
+                }
+                var i, j, groupNum, domain, variable;
+                variable = selectUnassignedVariable(digits);
+                i = variable[0];
+                j = variable[1];
+                groupNum = getGroup(i, j);
+                domain = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+                domain = shuffleArray(domain);
+                var l;
+                
+                for (l = 0; l < domain.length; l++) {
+                    var value = domain[l];
+                    if (isConsistent(value, rowSets[i], colSets[j], groupSets[groupNum])) {
+                        
+                        digits[i][j] = value;
+                        rowSets[i].add(value);
+                        colSets[j].add(value);
+                        groupSets[groupNum].add(value);
+
+                        var result;
+                        
+                        result = backtrackingSolver(digits, rowSets, colSets, groupSets);
+                        
+                        if (!isFailure(result)) {
+                            
+                            return result;
+                        }
+                        
+                        digits[i][j] = 0;
+                        rowSets[i].delete(value);
+                        colSets[j].delete(value);
+                        groupSets[groupNum].delete(value);
+                        
+                    } 
+                }
+                return [];
+            }
+
+            function selectUnassignedVariable(digits){
+                var i, j;
+                for (i = 0; i < 9; i++) {
+                    for (j = 0; j < 9; j++) {
+                        if(digits[i][j] == 0) {
+                            // console.log(i, j);
+                            return [i, j];
+                        }
+                    }
+                }
+            }
+
+            function isConsistent(value, rowSet, colSet, groupSet) {
+                if (rowSet.has(value) || colSet.has(value) || groupSet.has(value)) {
+                    return false;
+                }
+                return true;
+            }
+
+            function isDone(rowSets, colSets, groupSets) {
+                // console.log(rowSets[0]);
+                var i;
+                for (i = 0; i < 9; i++) {
+                    // console.log(i);
+                    if (rowSets[i].size != 10 || colSets[i].size != 10 || groupSets[i].size != 10) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            function isFailure(result) {
+                if (arraysEqual(result, [])) {
+                    return true;
+                }
+                return false;
+            }
+
+            function getGroup(i, j) {
+                if (i < 3) {
+                    if (j < 3) {
+                        return 0;
+                    } else if (j < 6) {
+                        return 3;
+                    } else {
+                        return 6;
+                    }
+                } else if (i < 6) {
+                    if (j < 3) {
+                        return 1;
+                    } else if (j < 6) {
+                        return 4;
+                    } else {
+                        return 7;
+                    }
+                } else {
+                    if (j < 3) {
+                        return 2;
+                    } else if (j < 6) {
+                        return 5;
+                    } else {
+                        return 8;
+                    }
+                }
+            }
+
+            // Utils
+            // from https://www.w3schools.com/js/js_random.asp
+            function getRndInteger(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) ) + min;
+            }
+            // from https://love2dev.com/blog/javascript-remove-from-array/#remove-from-array-splice
+            function arrayRemove(arr, value) {
+                return arr.filter(function(ele){ return ele != value; });
+            }
+            // from https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
+            function arraysEqual(a, b) {
+                if (a === b) return true;
+                if (a == null || b == null) return false;
+                if (a.length != b.length) return false;
+
+                // If you don't care about the order of the elements inside
+                // the array, you should sort both arrays here.
+                // Please note that calling sort on an array will modify that array.
+                // you might want to clone your array first.
+
+                for (var i = 0; i < a.length; ++i) {
+                    if (a[i] !== b[i]) return false;
+                }
+                return true;
+            }
+            // from https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array?rq=1
+            function shuffleArray(array) {
+                for (var i = array.length - 1; i > 0; i--) {
+                    var j = Math.floor(Math.random() * (i + 1));
+                    var temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
+                }
+                return array;
+            }
+
+            // from https://www.sitepoint.com/delay-sleep-pause-wait/
+            function sleep(milliseconds) {
+                const date = Date.now();
+                let currentDate = null;
+                do {
+                    currentDate = Date.now();
+                } while (currentDate - date < milliseconds);
+            }
+
+            ///////////////////////////////////////////////////////////////////////////////
+            //////////////////////////////////// Drawing stuff ////////////////////////////
+            ///////////////////////////////////////////////////////////////////////////////
+
+            function drawBoard(context, board, digits, fillPercent) {
+                var i, j;
+                for (i = 0; i < 9; i++) {
+                    for (j = 0; j < 9; j++) {
+                        if (Math.random() < fillPercent) {
+                            board[j][i] = digits[j][i];
+                            
+                            drawSquare(context, digits[j][i], i , j);
+                        } else {
+                            drawSquare(context, " ", i , j);
+                        }
+                        
+                    }
+                }
+                console.log(board);
+            }
+
+            function drawSquare(context, digit, i, j, color = "#000000") {
+                if ((i >= 3 && i <= 5 && j >= 0 && j <= 2) || (i >= 0 && i <= 2 && j >= 3 && j <= 5) || (i >= 6 && i <= 8 && j >= 3 && j <= 5) || (i >= 3 && i <= 5 && j >= 6 && j <= 8)) {
+                    context.fillStyle = "grey";
+                } else {
+                    context.fillStyle = "#FFFFFF";
+                }
+                
+                context.fillRect(i*50 + 2.5, j*50 + 2.5, 45, 45);
+
+                context.font = "20px Arial";
+                context.fillStyle = color;
+                context.fillText(digit, i*50 + 20, j*50 + 40);
+            }
+           
+            ////////////////////////////////////////////////////////////////////////////////
+            /////////////////////////////// Game Play Input ////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////////
+
+            var elem = document.getElementById('canvas'),
+                elemLeft = elem.offsetLeft,
+                elemTop = elem.offsetTop,
+                context = elem.getContext('2d'),
+                elements = [];
+
+            
+            var easy = document.getElementById("easy");
+            var medium = document.getElementById("medium");
+            var hard = document.getElementById("hard");
+
+            var check = document.getElementById("checkButton");
+            var reveal = document.getElementById("solveButton");
+
+            check.addEventListener('click', function(event) {
+                console.log("Check Button was Pressed");
+            });
+
+            reveal.addEventListener('click', function(event) {
+                console.log("Reveal Button was Pressed");
+            });
+
+            easy.addEventListener('click', function(event) {
+                // The sudoku board
+                var board = new Array(9);
+                
+                // The soduko answer
+                var digits = new Array(9);
+                // A set for every row to check validity
+                var rowSets = new Array(9);
+                // A set for every col to check validity
+                var colSets = new Array(9);
+                // A set for every group to check validity
+                var groupSets = new Array(9);
+                // digits is a satisfying assignment, the sets are the contraints on the rows, cols, and groups
+                var i;
+                var j;
+                for (i = 0; i < digits.length; i++) {
+                    digits[i] = new Array(9);
+                    board[i] = new Array(9);
+                    for (j = 0; j < digits[i].length; j++) {
+                        digits[i][j] = 0;
+                    }
+                    rowSets[i] = new Set();
+                    rowSets[i].add(0);
+                    colSets[i] = new Set();
+                    colSets[i].add(0);
+                    groupSets[i] = new Set();
+                    groupSets[i].add(0);
+                }
+
+                var digits = generateValidDigits(digits, rowSets, colSets, groupSets);
+                drawBoard(context, board, digits, 0.7);
+            });
+
+            medium.addEventListener('click', function(event) {
+                // The sudoku board
+                var board = new Array(9);
+                
+                // The soduko answer
+                var digits = new Array(9);
+                // A set for every row to check validity
+                var rowSets = new Array(9);
+                // A set for every col to check validity
+                var colSets = new Array(9);
+                // A set for every group to check validity
+                var groupSets = new Array(9);
+                // digits is a satisfying assignment, the sets are the contraints on the rows, cols, and groups
+                var i;
+                var j;
+                for (i = 0; i < digits.length; i++) {
+                    digits[i] = new Array(9);
+                    board[i] = new Array(9);
+                    for (j = 0; j < digits[i].length; j++) {
+                        digits[i][j] = 0;
+                    }
+                    rowSets[i] = new Set();
+                    rowSets[i].add(0);
+                    colSets[i] = new Set();
+                    colSets[i].add(0);
+                    groupSets[i] = new Set();
+                    groupSets[i].add(0);
+                }
+
+                var digits = generateValidDigits(digits, rowSets, colSets, groupSets);
+                drawBoard(context, board, digits, 0.6);
+            });
+
+            hard.addEventListener('click', function(event) {
+                // The sudoku board
+                var board = new Array(9);
+                
+                // The soduko answer
+                var digits = new Array(9);
+                // A set for every row to check validity
+                var rowSets = new Array(9);
+                // A set for every col to check validity
+                var colSets = new Array(9);
+                // A set for every group to check validity
+                var groupSets = new Array(9);
+                // digits is a satisfying assignment, the sets are the contraints on the rows, cols, and groups
+                var i;
+                var j;
+                for (i = 0; i < digits.length; i++) {
+                    digits[i] = new Array(9);
+                    board[i] = new Array(9);
+                    for (j = 0; j < digits[i].length; j++) {
+                        digits[i][j] = 0;
+                    }
+                    rowSets[i] = new Set();
+                    rowSets[i].add(0);
+                    colSets[i] = new Set();
+                    colSets[i].add(0);
+                    groupSets[i] = new Set();
+                    groupSets[i].add(0);
+                }
+
+                var digits = generateValidDigits(digits, rowSets, colSets, groupSets);
+                
+                drawBoard(context, board, digits, 0.3);
+            });
+
+            elem.addEventListener('click', function(event) {
+                var x = event.pageX - elemLeft,
+                y = event.pageY - elemTop;
+                var i = Math.floor(x/50);
+                var j = Math.floor(y/50);
+                elements.push([i, j])
+                // console.log(elements);
+                drawSquare(context, "?", i, j, "blue");
+                // console.log(Math.floor(x/50), Math.floor(y/50));
+            })
+
+            document.addEventListener("keydown", function(event) {
+                if (elements.length == 0) {
+                    console.log("elements is empty");
+                } else {
+                    var pos = elements.pop();
+                    if (event.keyCode == "1".charCodeAt(0)) {
+                        drawSquare(context, 1, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "2".charCodeAt(0)) {
+                        drawSquare(context, 2, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "3".charCodeAt(0)) {
+                        drawSquare(context, 3, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "4".charCodeAt(0)) {
+                        drawSquare(context, 4, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "5".charCodeAt(0)) {
+                        drawSquare(context, 5, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "6".charCodeAt(0)) {
+                        drawSquare(context, 6, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "7".charCodeAt(0)) {
+                        drawSquare(context, 7, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "8".charCodeAt(0)) {
+                        drawSquare(context, 8, pos[0], pos[1], "blue");
+                    } else if (event.keyCode == "9".charCodeAt(0)) {
+                        drawSquare(context, 9, pos[0], pos[1], "blue");
+                    } else {
+                        elements.push(pos);
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

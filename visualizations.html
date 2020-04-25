@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+
+  <title>Visualizations</title>
+  <meta name="description" content="CS 61B Visualizations of Algorithms and Data Structures">
+  <meta name="author" content="Ethan Mehta">
+
+  <link rel="stylesheet" href="">
+
+</head>
+
+<body>
+  <header>
+    <h1>Data Structures Visualizations</h1>
+    <h2><span class="tagline">Portal to Understanding Computer Science through Visualization</span></h2>
+    
+    <nav>
+      <ul>
+        <li><a href="">Home</a></li>
+        <li><a href="index.html">Visualizations</a></li>
+        <li><a href="">Notes</a></li>
+      </ul>
+    </nav>
+
+  </header>
+
+  <article>
+    <h1>Clock Visualization</h1>
+    
+    <p>My first visualization as you can see in <a href="#fig1">Figure 1</a>,
+    <figure id="fig1">
+    <figcaption>Visualization</figcaption>
+    <canvas id="canvas" width="400" height="400" style="background-color:#333"></canvas>
+  
+    </figure>
+    
+  </article>
+  <article>
+    <h1>Visualization #2</h1>
+    
+    <p>My second visualization as you can see in <a href="#fig2">Figure 2</a>,
+    <figure id="fig2">
+    <figcaption>Visualization#2</figcaption>
+    <canvas id="canvas2" width="400" height="400" style="background-color:#333"></canvas>
+  
+    </figure>
+    
+  </article>
+
+
+  
+
+  <script>
+    var canvas = document.getElementById("canvas");
+    var ctx = canvas.getContext("2d");
+    var radius = canvas.height / 2;
+    ctx.translate(radius, radius);
+    radius = radius * 0.90
+    setInterval(drawClock, 1000);
+    
+    function drawClock() {
+      drawFace(ctx, radius);
+      drawNumbers(ctx, radius);
+      drawTime(ctx, radius);
+    }
+
+    function drawTime(ctx, radius){
+      var now = new Date();
+      var hour = now.getHours();
+      var minute = now.getMinutes();
+      var second = now.getSeconds();
+      //hour
+      hour = hour%12;
+      hour = (hour*Math.PI/6)+(minute*Math.PI/(6*60))+(second*Math.PI/(360*60));
+      drawHand(ctx, hour, radius*0.5, radius*0.07);
+      //minute
+      minute = (minute*Math.PI/30)+(second*Math.PI/(30*60));
+      drawHand(ctx, minute, radius*0.8, radius*0.07);
+      // second
+      second = (second*Math.PI/30);
+      drawHand(ctx, second, radius*0.9, radius*0.02);
+    }
+
+    function drawHand(ctx, pos, length, width) {
+      ctx.beginPath();
+      ctx.lineWidth = width;
+      ctx.lineCap = "round";
+      ctx.moveTo(0,0);
+      ctx.rotate(pos);
+      ctx.lineTo(0, -length);
+      ctx.stroke();
+      ctx.rotate(-pos);
+    }
+    function drawFace(ctx, radius) {
+      var grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, 2*Math.PI);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+      grad = ctx.createRadialGradient(0,0,radius*0.95, 0,0,radius*1.05);
+      grad.addColorStop(0, '#333');
+      grad.addColorStop(0.5, 'white');
+      grad.addColorStop(1, '#333');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = radius*0.1;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, radius*0.1, 0, 2*Math.PI);
+      ctx.fillStyle = '#333';
+      ctx.fill();
+    }
+
+    function drawNumbers(ctx, radius) {
+      var ang;
+      var num;
+      ctx.font = radius * 0.15 + "px arial";
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+      for(num = 1; num < 13; num++){
+        ang = num * Math.PI / 6;
+        ctx.rotate(ang);
+        ctx.translate(0, -radius * 0.85);
+        ctx.rotate(-ang);
+        ctx.fillText(num.toString(), 0, 0);
+        ctx.rotate(ang);
+        ctx.translate(0, radius * 0.85);
+        ctx.rotate(-ang);
+      }
+    }
+
+    // Second visualization starts here (Graph API)
+    var canvas2 = document.getElementById("canvas2");
+    var ctx2 = canvas2.getContext("2d");
+    var height = canvas2.height;
+    var width = canvas2.width;
+    var radius2 = height / 2;
+
+    ctx2.translate(radius2, radius2);
+    nodes = []
+    edges = []
+    
+    drawGraph(ctx2, nodes, edges);
+
+    
+    
+    
+    function drawGraph(ctx, nodes, edges) {
+      drawNodeRandom(ctx, nodes, 0, 20);
+      drawNodeRandom(ctx, nodes, 1, 20);
+      drawEdge(ctx, nodes, edges, 0, 1);
+      drawNodeRandom(ctx, nodes, 2, 20);
+      drawEdge(ctx, nodes, edges, 1, 2);
+      drawNodeRandom(ctx, nodes, 3, 20);
+      drawNodeRandom(ctx, nodes, 4, 20);
+      drawNodeRandom(ctx, nodes, 5, 20);
+      drawEdge(ctx, nodes, edges, 3, 2);
+      drawEdge(ctx, nodes, edges, 1, 4);
+      drawEdge(ctx, nodes, edges, 5, 2);
+      printArray(nodes);
+      printArray(edges);
+    }
+    
+    // function drawNodes(numNodes = 0) {
+
+    // }
+
+    // function drawEdges(edgeList = []) {
+
+    // }
+
+    // Helper Methods
+    function drawNodeRandom(ctx, nodes, number, radius = 20, push=true) {
+      satisfied = false;
+      pos = selectValidRandomPosition(nodes, radius);
+
+      drawNode(ctx, nodes, pos[0], pos[1], number, radius, push);
+    }
+
+    function selectValidRandomPosition(nodes, radius) {
+      var i;
+      xpos = getRandomInt(width) - radius2;
+      ypos = getRandomInt(height) - radius2;
+
+      for (i = 0; i < nodes.length; i++) {
+        xpos1 = nodes[i][0];
+        ypos1 = nodes[i][1];
+        centerDistance = distance(xpos, ypos, xpos1, ypos1);
+        if (centerDistance < radius) {
+          xpos = getRandomInt(width) - radius2;
+          ypos = getRandomInt(height) - radius2;
+          i = 0;
+        }
+      }
+      return [xpos, ypos];
+    }
+    
+    function drawNode(ctx, nodes, xpos, ypos, number = 0, radius = 20, push = true) {
+      var num = number;
+      ctx.font = radius * 0.9 + "px arial";
+      ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+
+      ctx.beginPath();
+      ctx.arc(xpos, ypos, radius, 0, 2*Math.PI);
+      ctx.fillStyle = 'white';
+      ctx.fill();
+
+      ctx.fillStyle = 'black';
+      ctx.fillText(num.toString(), xpos, ypos);
+
+      if (push == true) {
+        nodes.push([xpos, ypos, num, radius]);
+      } 
+    }
+
+    function drawEdge(ctx, nodes, edges, from_nodeNum, to_nodeNum) {
+      ctx.beginPath();
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 7;
+      ctx.moveTo(nodes[from_nodeNum][0], nodes[from_nodeNum][1]);
+      ctx.lineTo(nodes[to_nodeNum][0], nodes[to_nodeNum][1]);
+      ctx.stroke();
+      edges.push([from_nodeNum, to_nodeNum]);
+      drawNode(ctx, nodes, nodes[from_nodeNum][0], nodes[from_nodeNum][1], number = nodes[from_nodeNum][2], nodes[from_nodeNum][3], false);
+      drawNode(ctx, nodes, nodes[to_nodeNum][0], nodes[to_nodeNum][1], number = nodes[to_nodeNum][2], nodes[to_nodeNum][3], false);
+    }
+
+    function makeAdjacencyList(nodes, edges){
+      
+    } 
+
+    // Utils
+    function printArray(nodes) {
+      for (var i = 0; i < nodes.length; i++){
+        console.log(nodes[i].toString());
+      }
+    }
+
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * Math.floor(max));
+    }
+
+    function distance(xpos1, ypos1, xpos2, ypos2) {
+      return Math.sqrt(Math.abs(xpos1 - xpos2)**2 + Math.abs(ypos1 - ypos2)**2)
+    }
+
+  </script>
+</body>
+</html>
